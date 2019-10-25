@@ -20,13 +20,18 @@ namespace WFA191024
                 @"Server=(localdb)\MSSQLLocalDB;" +
                 @"AttachDbFilename=|DataDirectory|krea.mdf");
             InitializeComponent();
-            cbNevek.SelectedIndexChanged += tbKereses_TextChanged;
+
+            tbKereses.TextChanged += Kereses;
+            cbNevek.SelectedIndexChanged += Kereses;
+            cbNevek.TextChanged += Kereses;
+
             LvFill();
             CbFill();
         }
 
         private void CbFill()
         {
+            cbNevek.Items.Clear();
             conn.Open();
             var cmd = new SqlCommand(
                 "SELECT ceg FROM ugyfelek GROUP BY ceg;", conn);
@@ -41,6 +46,7 @@ namespace WFA191024
 
         private void LvFill()
         {
+            lvAdatok.Items.Clear();
             conn.Open();
             var cmd = new SqlCommand("SELECT * FROM ugyfelek", conn);
             var reader = cmd.ExecuteReader();
@@ -54,14 +60,14 @@ namespace WFA191024
             conn.Close();
         }
 
-        private void tbKereses_TextChanged(object sender, EventArgs e)
+        private void Kereses(object sender, EventArgs e)
         {
             lvAdatok.Items.Clear();
             conn.Open();
 
             var cmd = new SqlCommand(
                 "SELECT * FROM ugyfelek " +
-                $"WHERE nev LIKE '{tbKereses.Text}%' AND ceg LIKE '{cbNevek.SelectedItem}';",
+                $"WHERE nev LIKE '{tbKereses.Text}%' AND ceg LIKE '{cbNevek.Text}%';",
                 conn);
             var reader = cmd.ExecuteReader();
             while (reader.Read())
@@ -71,6 +77,24 @@ namespace WFA191024
                 lvAdatok.Items.Add(lvi);
             }
             conn.Close();
+        }
+
+        private void btnRogzit_Click(object sender, EventArgs e)
+        {
+            conn.Open();
+
+            var adapter = new SqlDataAdapter();
+
+            adapter.InsertCommand = new SqlCommand(
+                "INSERT INTO ugyfelek (nev, ceg) VALUES " +
+                $"('{tbNev.Text}', '{tbCeg.Text}');", conn);
+
+            adapter.InsertCommand.ExecuteNonQuery();
+
+            conn.Close();
+
+            LvFill();
+            CbFill();
         }
     }
 }
